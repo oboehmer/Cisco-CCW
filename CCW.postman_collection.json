@@ -1,0 +1,322 @@
+{
+	"info": {
+		"_postman_id": "fcfc7ee2-49c8-47ed-aef4-d242b8249303",
+		"name": "CCW",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const resp = pm.response.json()",
+							"pm.collectionVariables.set('CCW_TOKEN', pm.access_token)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "{{CCW_CLIENT_ID}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{CCW_CLIENT_SECRET}}",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "{{CCO_USER}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{CCO_PASSWORD}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://cloudsso.cisco.com/as/token.oauth2",
+					"protocol": "https",
+					"host": [
+						"cloudsso",
+						"cisco",
+						"com"
+					],
+					"path": [
+						"as",
+						"token.oauth2"
+					]
+				},
+				"description": "https://www.cisco.com/E-Learning/gbo-ccw/cdc_bulk/Cisco_Commerce_B2B_Implementation_Guides/Access_Authorization/CreateToken_API/CCW_API_Generate_Token_IG.pdf"
+			},
+			"response": []
+		},
+		{
+			"name": "Hello API",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{CCW_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": {
+					"raw": "https://api.cisco.com/hello",
+					"protocol": "https",
+					"host": [
+						"api",
+						"cisco",
+						"com"
+					],
+					"path": [
+						"hello"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check Order Status",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{CCW_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"GetPurchaseOrder\": {\n        \"value\": {\n            \"DataArea\": {\n                \"PurchaseOrder\": [\n                    {\n                        \"PurchaseOrderHeader\": {\n                            \"ID\": {\n                                \"value\": \"\"\n                            },\n                            \"DocumentReference\": [\n                                {\n                                    \"ID\": {\n                                        \"value\": \"\"\n                                    }\n                                }\n                            ],\n                            \"SalesOrderReference\": [\n                                {\n                                    \"ID\": {\n                                        \"value\": \"12345678\"\n                                    }\n                                }\n                            ],\n                            \"Description\": [\n                                {\n                                    \"value\": \"Yes\",\n                                    \"typeCode\": \"details\"\n                                }\n                            ]\n                        }\n                    }\n                ]\n            },\n            \"ApplicationArea\": {\n                \"CreationDateTime\": \"2022-02-06T07:50:16Z\",\n                \"BODID\": {\n                    \"value\": \"BoDID-test\",\n                    \"schemeVersionID\": \"V1\"\n                }\n            }\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.cisco.com/commerce/ORDER/v2/sync/checkOrderStatus",
+					"protocol": "https",
+					"host": [
+						"api",
+						"cisco",
+						"com"
+					],
+					"path": [
+						"commerce",
+						"ORDER",
+						"v2",
+						"sync",
+						"checkOrderStatus"
+					],
+					"query": [
+						{
+							"key": "SO_NUMBER",
+							"value": "12345678",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Serial Numbers",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "\n{\n\"serialNumberRequest\":\n{\n\"salesOrderNumber\" : \"12345678\",\n\"pageNumber\" : \"1\"\n}\n}\n"
+				},
+				"url": {
+					"raw": "https://api.cisco.com/commerce/ORDER/sync/getSerialNumbers",
+					"protocol": "https",
+					"host": [
+						"api",
+						"cisco",
+						"com"
+					],
+					"path": [
+						"commerce",
+						"ORDER",
+						"sync",
+						"getSerialNumbers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Acquire Estimate",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{CCW_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text",
+						"disabled": true
+					},
+					{
+						"key": "Accept",
+						"value": "application/xml",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n    <s:Header>\n        <h:Messaging xmlns:h=\"http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/\"\n            xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n            xmlns=\"http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/core/200704/\"\n            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n            <UserMessage>\n                <MessageInfo>\n                    <Timestamp>2018-02-13T13:17:30.000Z</Timestamp>\n                    <MessageId>urn:uuid:20180213131730@eB2BPSTestTool.cisco.com</MessageId>\n                </MessageInfo>\n                <PartyInfo>\n                    <From>\n                        <PartyId>eB2BPSTestTool.cisco.com</PartyId>\n                        <Role>http://example.org/roles/Buyer</Role>\n                    </From>\n                    <To>\n                        <PartyId>ESTlistEstimateService.cisco.com</PartyId>\n                        <Role>http://example.org/roles/Seller</Role>\n                    </To>\n                </PartyInfo>\n                <CollaborationInfo/>\n                <MessageProperties/>\n                <PayloadInfo>\n                    <PartInfo href=\"id:part@example.com\">\n                        <Schema location=\"http://www.cisco.com/assets/wsx_xsd/QWS/root.xsd\" version=\"2.0\"/>\n                        <PartProperties>\n                            <Property name=\"Description\">WS Test Tool by Partner Services</Property>\n                            <Property name=\"MimeType\">application/xml</Property>\n                        </PartProperties>\n                    </PartInfo>\n                </PayloadInfo>\n            </UserMessage>\n        </h:Messaging>\n    </s:Header>\n    <s:Body>\n        <ProcessQuote releaseID=\"2014\" versionID=\"1.0\" systemEnvironmentCode=\"Production\" languageCode=\"en-US\"\n            xmlns=\"http://www.openapplications.org/oagis/10\">\n            <ApplicationArea>\n                <Sender>\n                    <ComponentID schemeAgencyID=\"Cisco\">B2B-3.0</ComponentID>\n                </Sender>\n                <CreationDateTime>2018-02-13</CreationDateTime>\n                <BODID schemeAgencyID=\"Cisco\">urn:uuid:20180213131730@eB2BPSTestTool.cisco.com</BODID>\n                <Extension>\n                    <Code typeCode=\"Estimate\">Estimate</Code>\n                </Extension>\n            </ApplicationArea>\n            <DataArea>\n                <Quote>\n                    <QuoteHeader>\n                        <ID typeCode=\"Estimate ID\">XY1234567890</ID>\n                        <Extension>\n                        </Extension>\n                    </QuoteHeader>\n                </Quote>\n            </DataArea>\n        </ProcessQuote>\n    </s:Body>\n</s:Envelope>\n",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.cisco.com/commerce/EST/v2/async/acquireEstimate",
+					"protocol": "https",
+					"host": [
+						"api",
+						"cisco",
+						"com"
+					],
+					"path": [
+						"commerce",
+						"EST",
+						"v2",
+						"async",
+						"acquireEstimate"
+					],
+					"query": [
+						{
+							"key": "SO_NUMBER",
+							"value": " 12345678",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{CCW_TOKEN}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "CCW_TOKEN",
+			"value": "any"
+		},
+		{
+			"key": "CCW_CLIENT_ID",
+			"value": "<insert-your-application's id>"
+		},
+		{
+			"key": "CCW_CLIENT_SECRET",
+			"value": "<insert-your-application's secret>"
+		}
+	]
+}
