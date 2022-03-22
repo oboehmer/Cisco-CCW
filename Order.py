@@ -13,7 +13,7 @@ class Order(object):
     - party
     - status
     - salesorder
-    - shiptoparty
+    - shiptoname
     - lineitems  (list of dicts, key'ed by linenumber (i.e. 1.0, 2.0, 2.0.1, etc.))
         sku
         description
@@ -48,7 +48,36 @@ class Order(object):
                 break
         else:
             self.ordername = ''
-        self.shiptoparty = po_header['ShipToParty']['Name'][0]['value']
+        self.shiptoname = po_header['ShipToParty']['Name'][0]['value']
+        try:
+            a = []
+            for l in po_header['ShipToParty']['Location'][0]['Address'][0]['AddressLine']:
+                a.append(l['value'])
+            a.append(po_header['ShipToParty']['Location'][0]['Address'][0]['CityName']['value'])
+            a.append(po_header['ShipToParty']['Location'][0]['Address'][0]['CountryCode']['value'])
+            self.shiptoaddress = ', '.join(a)
+        except KeyError:
+            self.shiptoaddress = 'unknown/error'
+
+        try:
+            self.shiptocontactname = po_header['ShipToParty']['Contact'][0]['PersonName'][0]['GivenName']['value']
+        except KeyError:
+            self.shiptocontactname = 'unknown/error'
+
+        try:
+            for l in po_header['ShipToParty']['Contact'][0]['TelephoneCommunication']:
+                if l['typeCode'] == 'Phone':
+                    self.shiptocontactphone = l['ID'][0]['value']
+                    break
+            else:
+                self.shiptocontactphone = ''
+        except KeyError:
+            self.shiptocontactphone = 'unknown/error'
+
+        try:
+            self.shiptocontactemail = po_header['ShipToParty']['Contact'][0]['EMailAddressCommunication'][0]['ID'][0]['value']
+        except KeyError:
+            self.shiptocontactemail = 'unknown/error'
 
         self.amount = po_header['TotalAmount']['value']
         self.currencycode = po_header['TotalAmount']['currencyCode']
@@ -62,7 +91,6 @@ class Order(object):
             is_toplevel = (re.match(r'\d+\.0$', linenumber) is not None)
             if toplevel_only and not is_toplevel:
                 continue
-
             item = {'sku': l['Item']['ID']['value'],
                     'description': l['Item']['Description'][0]['value'],
                     'quantity': l['Item']['Lot'][0]['Quantity']['value'],
@@ -84,7 +112,19 @@ class Order(object):
                         item['shipdate'] = l['Status'][0]['Extension'][0]['DateTime'][0]['value']
                 except KeyError:
                     item['shipdate'] = 'not found'
+
+                item['Tracking Number'] = item['Tracking URL'] = ''
+                for step in l.get('TransportStep', []):
+                    for t in step['TransportationTerm'][0]['Description']:
+                        if t.get('typeCode', '') == 'Tracking Number':
+                            item['Tracking Number'] = t.get('value', '')
+                        if t.get('typeCode', '') == 'Tracking URL':
+                            item['Tracking URL'] = t.get('value', '')
+                            break
+                    if item['Tracking URL']:
+                        break
             else:
+                item['Tracking Number'] = item['Tracking URL'] = ''
                 item['shipdate'] = ''
 
             # set keys we might set later
@@ -200,16 +240,27 @@ class Order(object):
             line['SO Number'] = self.salesorder
             line['SO Name'] = self.ordername
             line['SO Date'] = self._convert_date(self.orderdate, dateformat=dateformat)
+
+            # pull out known attributes, and then append other line items which might have been added
+            # later. this avoids having to adjust this function whenever we add a new method.
+            item = dict(v)
             line['Line Number'] = k
-            line['Quantity'] = v['quantity']
-            line['Item Name'] = v['sku']
-            line['Item Description'] = v['description']
-            line['Line Status'] = v['status']
-            line['Requested Delivery'] = self._convert_date(v['requesteddelivery'], dateformat=dateformat)
-            line['Promised Delivery'] = self._convert_date(v['promiseddelivery'], dateformat=dateformat)
-            line['Ship Date'] = self._convert_date(v['shipdate'], dateformat=dateformat)
-            line['Shipset'] = v['shipset']
-            line['Serial Numers'] = ' '.join(v['serials'])
+            line['Quantity'] = item.pop('quantity')
+            line['Item Name'] = item.pop('sku')
+            line['Item Description'] = item.pop('description')
+            line['Line Status'] = item.pop('status')
+            line['Requested Delivery'] = self._convert_date(item.pop('requesteddelivery'), dateformat=dateformat)
+            line['Promised Delivery'] = self._convert_date(item.pop('promiseddelivery'), dateformat=dateformat)
+            line['Ship Date'] = self._convert_date(item.pop('shipdate'), dateformat=dateformat)
+            line['Shipset'] = item.pop('shipset', '')
+            line['Serial Numers'] = ' '.join(item.pop('serials', []))
+            line['Ship-To Name'] = self.shiptoname
+            line['Ship-To Address'] = self.shiptoaddress
+            line['Ship-To Contact'] = self.shiptocontactname
+            line['Ship-To Contact Phone'] = self.shiptocontactphone
+            line['Ship-To Contact Email'] = self.shiptocontactemail
+
+            line.update(item)
             result.append(line)
 
         return result
