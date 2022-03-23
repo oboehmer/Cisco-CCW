@@ -29,8 +29,10 @@ $ export CCO_PASSWORD CCW_CLIENTSECRET
 
 The scripts also need to know your CCO username and CCW client ID. You can put the latter into utils.py as default, and/or populate them in the environment:
 
+```
 $ export CCO_USERNAME='xxxx'
 $ export CCW_CLIENTID='xxxxxxxxxxxxxxxx'
+```
 
 4. Test the API and the setup of your environment:
 
