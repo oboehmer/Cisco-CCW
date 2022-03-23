@@ -17,7 +17,7 @@ pip install -r requirements.txt
 export PYTHONPATH=$(pwd)
 ``` 
 
-3. Set the following environment variables: `CCO_PASSWORD` to your CEC password (if not set the scripts prompts you to add it) and `CCW_CLIENTSECRET` to the secret for our client (check with oboehmer or guboehm for its value). In Linux/MacOS, you can use the following commands in your Terminal (note that the `read -s ..` command does not each the password as you type it):
+3. Set the following environment variables: `CCO_PASSWORD` to your CEC password (if not set the scripts prompts you to add it) and `CCW_CLIENTSECRET` to the secret for your client. In Linux/MacOS, you can use the following commands in your Terminal (note that the `read -s ..` command does not each the password as you type it):
 
 ```
 $ read -s CCO_PASSWORD
